@@ -1,0 +1,22 @@
+CREATE TABLE tasks (
+    id CHAR(36) NOT NULL,
+    user_id CHAR(36) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500) NULL,
+    category_id CHAR(36) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    category_scope CHAR(36) AS (IFNULL(category_id, '00000000-0000-0000-0000-000000000000')) STORED,
+    name_key VARCHAR(100) AS (TRIM(name)) STORED,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_tasks_user_id (user_id, id),
+    UNIQUE KEY uq_tasks_category_name (user_id, category_scope, name_key),
+    KEY idx_tasks_user_category (user_id, category_id),
+    KEY idx_tasks_status (status),
+    CONSTRAINT fk_tasks_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_tasks_category FOREIGN KEY (user_id, category_id) REFERENCES categories (user_id, id) ON DELETE RESTRICT,
+    CONSTRAINT chk_tasks_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'ARCHIVED', 'DELETED')),
+    CONSTRAINT chk_tasks_name CHECK (CHAR_LENGTH(TRIM(name)) BETWEEN 1 AND 100),
+    CONSTRAINT chk_tasks_id CHECK (id <> '00000000-0000-0000-0000-000000000000')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
